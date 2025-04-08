@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+
+// Enum for Task Status
+enum TaskStatus {
+  pending
+  completed
+  in_progress
+}
+
+// Enum for Task Priority
+enum TaskPriority {
+  high
+  medium
+  low
+}
+
+model User {
+  id              Int      @id @default(autoincrement())  // User's ID (Primary key, auto-incremented)
+  email           String   @unique                      // User's email, must be unique
+  password        String   // User's password
+  created_at      DateTime @default(now())               // Timestamp of user creation
+  updated_at      DateTime @updatedAt                   // Timestamp of last update
+  last_login_at   DateTime?                             // Timestamp of last login (nullable)
+  role            String   // User's role (e.g., 'admin', 'user')
+  
+  // Relationship
+  tasks           Task[]   // A user can have multiple tasks
+}
+
+model Task {
+  id              Int      @id @default(autoincrement()) // Task's ID (Primary key, auto-incremented)
+  userId          Int      // Foreign key to User model
+  title           String   // Title of the task
+  description     String?  // Description of the task (nullable)
+  status          TaskStatus   // Status of the task (e.g., 'pending', 'in-progress', 'completed')
+  priority        TaskPriority    // Priority of the task (e.g., 'high', 'medium', 'low')
+  due_date        DateTime? // Due date of the task (nullable)
+  estimated_duration TIme
+  created_at      DateTime @default(now())               // Timestamp of task creation
+  updated_at      DateTime @updatedAt                   // Timestamp of last update
+  completed_at    DateTime? // Timestamp of completion (nullable)
+  category_id     Int?     // Foreign key to Category model (nullable)
+  
+  // Relationships
+  user            User     @relation(fields: [userId], references: [id])  // User owning the task
+  category        Category? @relation(fields: [category_id], references: [id]) // Task category (optional)
+  tags            Tag[]    @relation("TaskTags")  // Many-to-many relationship with tags
+}
+
+model Category {
+  id              Int      @id @default(autoincrement()) // Category's ID (Primary key, auto-incremented)
+  name            String   // Name of the category
+  color           String   // Color associated with the category
+  created_at      DateTime @default(now())               // Timestamp of category creation
+  updated_at      DateTime @updatedAt                   // Timestamp of last update
+  
+  // Relationship
+  tasks           Task[]   // A category can have multiple tasks
+}
+
+model Tag {
+  id              Int      @id @default(autoincrement()) // Tag's ID (Primary key, auto-incremented)
+  name            String   // Name of the tag
+  created_at      DateTime @default(now())               // Timestamp of tag creation
+  updated_at      DateTime @updatedAt                   // Timestamp of last update
+  
+  // Relationship
+  tasks           Task[]   @relation("TaskTags")  // Many-to-many relationship with tasks
+}
+
+model Task_Tag {
+  taskId          Int      // Foreign key to Task model
+  tagId           Int      // Foreign key to Tag model
+  
+  // Composite primary key (taskId, tagId)
+  @@id([taskId, tagId])      // Composite primary key ensures no duplicates
+  
+  // Relationships
+  task            Task     @relation(fields: [taskId], references: [id])   // Task reference
+  tag             Tag      @relation(fields: [tagId], references: [id])    // Tag reference
+}
+
+model idAudit_Log {
+  id              Int      @id @default(autoincrement()) // Log ID (Primary key, auto-incremented)
+  userId          Int      // Foreign key to User model
+  action          String   // Action performed (e.g., 'create', 'update', 'delete')
+  details         String?  // Details of the action (optional)
+  created_at      DateTime @default(now())               // Timestamp of log creation
+  updated_at      DateTime @updatedAt                   // Timestamp of last update
+  
+  // Relationship
+  user            User     @relation(fields: [userId], references: [id])  // User who performed the action
+}

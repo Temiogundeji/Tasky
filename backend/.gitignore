@@ -1,0 +1,10 @@
+node_modules
+# Keep environment variables out of version control
+.env
+generated/prisma/
+
+
+# Connect to Supabase via connection pooling.
+DATABASE_URL="postgresql://postgres.bzyxhmncipjblbowevog:[YOUR-PASSWORD]@aws-0-eu-central-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+# Direct connection to the database. Used for migrations.
+DIRECT_URL="postgresql://postgres.bzyxhmncipjblbowevog:[YOUR-PASSWORD]@aws-0-eu-central-1.pooler.supabase.com:5432/postgres"
