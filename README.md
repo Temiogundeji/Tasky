@@ -1,104 +1,200 @@
-# Tasky -  Task Management System Breakdown
+# Tasky Desktop App: Architecture and Implementation Strategy
 
-### 1. Project Setup
-- Initialize Node.js project with TypeScript
-- Set up folder structure (controllers, routes, models, middlewares, utils)
-- Configure TypeScript for Node.js
-- Set up linting and formatting tools
+## Overall Approach
 
-### 2. Database Design
-- Design database schema for users and tasks
-- Set up database connection (consider MongoDB or PostgreSQL)
-- Create models with TypeScript interfaces/types
+You're building an offline-first desktop task management system with future cloud sync capabilities. Here's how to approach it systematically:
 
-### 3. Authentication System
-- Implement user registration endpoint
-- Implement login endpoint with JWT token generation
-- Create authentication middleware to protect routes
-- Implement token refresh mechanism
+## Architecture Design
 
-### 4. Task API Endpoints
-- Create CRUD endpoints for tasks
-- Add validation for task data
-- Implement filtering and sorting capabilities
-- Add pagination support
+### 1. Layered Architecture
 
-### 5. User Activity Logging
-- Create a logging middleware
-- Set up file stream for writing logs
-- Implement activity tracking (login, create task, update task)
-- Define log format and rotation policy
+```
+Presentation Layer (React) → Business Logic Layer → Data Access Layer → Local Database (SQLite)
+                                      ↓
+                              Future Sync Layer → Cloud Server
+```
 
-## Frontend Tasks
+### 2. Key Architectural Decisions
 
-### 1. Project Setup
-- Initialize React project with TypeScript
-- Set up folder structure (components, pages, hooks, services)
-- Configure React Router
-- Set up React Query
+1. **Offline-first design**: All operations work against local SQLite first
+2. **Event-driven architecture**: Use events to trigger sync operations when online
+3. **Conflict resolution strategy**: Decide early how to handle conflicts (e.g., last-write-wins, manual merge)
 
-### 2. Authentication Components
-- Create registration form with validation
-- Build login form with error handling
-- Implement authentication context/state management
-- Add protected routes
+## File Structure Deep Dive
 
-### 3. Task Components
-- Build task listing table with sorting capabilities
-- Create task creation form with validation
-- Implement task editing functionality
-- Add task status toggle with optimistic updates
+```
+/src
+├── main/
+│   ├── index.ts           # Added: Activity log initialization
+│   ├── window-manager.ts  # Added: Notification system hooks
+│   └── ipc-handlers.ts    # Added: New IPC channels:
+│                          # - 'tags:crud'
+│                          # - 'analytics:get'
+│                          # - 'activities:list'
+│
+├── renderer/
+│   ├── components/        # Added new components:
+│   │   ├── TagPicker/     # Tag management UI
+│   │   ├── PriorityBadge/ # Visual priority indicator
+│   │   └── CalendarView/  # Task calendar component
+│   ├── pages/
+│   │   ├── Dashboard/     # Analytics page with charts
+│   │   └── Tasks/
+│   │       └── TaskList/  # Enhanced with filtering/sorting
+│   ├── hooks/
+│   │   ├── useTags.ts     # Tag operations
+│   │   ├── useDueDates.ts # Deadline management
+│   │   └── useActivity.ts # Activity logging
+│   ├── stores/
+│   │   └── taskStore.ts   # Extended with:
+│   │       # - Priority sorting
+│   │       # - Tag filtering
+│   │       # - Due date handling
+│   └── App.tsx            # Added: Theme provider
+│
+├── database/
+│   ├── init.ts            # Added: Extended schema for:
+│   │                      # - Tags (new table)
+│   │                      # - Activity logs
+│   ├── models/
+│   │   ├── task.ts        # Added: priority, due_date, tags
+│   │   └── activity.ts    # New: Activity log model
+│   ├── repositories/
+│   │   ├── taskRepo.ts    # Added: Advanced queries:
+│   │   │                  # - Filter by tags
+│   │   │                  # - Sort by priority/due date
+│   │   └── activityRepo.ts # New: Activity logging
+│   └── migrations/
+│       └── 002_add_advanced_features.ts # New migration
+│
+├── services/
+│   ├── auth/              # Unchanged
+│   ├── tasks/             # Enhanced with:
+│   │   ├── tagging.ts     # Tag business logic
+│   │   ├── prioritization.ts
+│   │   └── dueDates.ts    # Reminder system
+│   ├── time-tracking/     # Unchanged
+│   └── sync/
+│       └── activitySync.ts # New: Sync activity logs
+│
+├── assets/
+│   ├── icons/             # Added: Priority icons
+│   └── preload/           # Unchanged
+│
+└── types/                 # Added new types:
+    ├── tag.ts             # Tag type definition
+    ├── priority.ts        # Priority levels
+    └── activity.ts        # Activity log types
+```
 
-### 4. Data Fetching and State Management
-- Set up API service with TypeScript interfaces
-- Implement React Query hooks for tasks CRUD operations
-- Add error handling and loading states
-- Configure query invalidation strategies
+## Feature Implementation Sequence
 
-### 5. UI/UX Enhancements
-- Create responsive layout
-- Implement theme support
-- Add notifications for actions (toast messages)
-- Build loading indicators and error states
+### Phase 1: Foundation
 
-## Integration Tasks
+1. Set up Electron + React + TypeScript boilerplate
+2. Configure SQLite with proper TypeScript interfaces
+3. Create basic window management
 
-### 1. API Integration
-- Connect frontend forms to backend endpoints
-- Implement proper error handling between frontend and backend
-- Set up authentication header management
-- Create TypeScript types/interfaces shared between frontend and backend
+### Phase 2: Core Data Layer
 
-### 2. Testing
-- Write unit tests for backend services
-- Create frontend component tests
-- Implement integration tests for critical flows
-- Add end-to-end testing
+1. Implement DB schema with migrations
+2. Create repository classes for each entity (Tasks, Users, TimeLogs)
+3. Add transaction support for complex operations
 
-### 3. Deployment Preparation
-- Set up environment configuration
-- Prepare build scripts
-- Create Docker configuration (optional)
-- Document deployment process
+### Phase 3: Authentication
 
-## Additional Recommended Features
+1. Local credential storage with secure hashing
+2. Session management using Electron's safeStorage
+3. Auth state propagation through the app
 
-1. **Task Categories/Tags**:
-   - Allow users to categorize tasks with custom labels
-   - Implement filtering by categories
-   - Add color coding for different categories
-   - Enable searching tasks by tags
+### Phase 4: Task Management Core
 
-2. **Dashboard with Analytics**:
-   - Create a visual dashboard showing task completion rates
-   - Display tasks by status (pending, in progress, completed)
-   - Show productivity trends over time
-   - Add time tracking for task completion
+(Files: services/tasks/, database/repositories/taskRepo.ts, stores/taskStore.ts)
 
-3. **Task Prioritization and Due Dates**:
-   - Implement priority levels (high, medium, low)
-   - Add due date functionality with reminders
-   - Create a calendar view for tasks
-   - Set up notifications for approaching deadlines
+1. Implement CRUD operations with local state updates
+2. Add validation for task data
+3. Implement search, filtering and sorting capabilities
+4. Add pagination support
+5. Create validation logic for task fields
 
-This breakdown should help you refresh your fullstack JavaScript skills while building a complete task management system. You can tackle each section sequentially or work on parallel tracks for frontend and backend to see how they integrate together.
+### Phase 5: Task Management Core Categories & Tags System
+
+(Files: database/models/tag.ts, components/TagPicker/, hooks/useTags.ts)
+
+1. Allow users to categorize tasks with custom labels
+2. Implement filtering by categories
+3. Add color coding for different categories
+4. Enable searching tasks by tags
+
+### Phase 5: Time Tracking
+
+(Files: services/time-tracking/, hooks/useTimer.ts)
+
+1. Add timer service with pause/resume functionality ⏱
+2. Add time tracking for task completion
+
+### Phase 6: Prioritization & Scheduling
+
+(Files: components/PriorityBadge/, services/tasks/dueDates.ts)
+
+1. Implement priority levels (high, medium, low)
+2. Add due date functionality with reminders
+3. Set up notifications for approaching deadlines
+
+### Phase 7: Analytics & Visualization
+
+(Files: pages/Dashboard/, stores/analyticsStore.ts)
+
+1. Create a visual dashboard showing task completion rates
+2. Display tasks by status (pending, in progress, completed)
+3. Show productivity trends over time
+4. Create a calendar view for tasks
+
+### Phase 8: Activity Logging
+
+(Files: main/activity-logger.ts, database/models/activity.ts)
+
+1. Create a logging middleware
+2. Set up file stream for writing logs
+3. Implement activity tracking (login, create task, update task)
+4. Define log format and rotation policy
+5. Implementation Flow Recommendation
+
+### Phase 5: Sync Preparation
+
+1. Design data change tracking system (add `last_modified` fields)
+2. Create conflict resolution strategy document
+3. Implement basic online/offline detection
+
+### Phase6: Future Sync Implementation Strategy
+
+1. **Change Tracking**:
+
+1. Add `is_synced` and `last_modified` columns to all tables
+1. Create a `pending_syncs` table for operations needing sync
+
+1. **Sync Service**:
+
+1. Implement background sync process
+1. Handle retries and conflict resolution
+1. Add manual sync trigger
+
+1. **Conflict Resolution**:
+   - Decide on merge strategies per entity type
+   - Implement client-side conflict resolution UI
+
+## Development Tips
+
+1. **Start Simple**: Build fully functional offline version first
+2. **Instrument Early**: Add logging for sync-related events from the beginning
+3. **Abstract Storage**: Create interfaces that could work with both local and remote storage
+4. **Test Offline Scenarios**: Simulate network failures during development
+
+## Timeline Adjustment Recommendation
+
+Consider adding an extra week for:
+
+- Robust error handling
+- Performance optimization
+- Additional testing of timer edge cases ⏱
+- Documentation
