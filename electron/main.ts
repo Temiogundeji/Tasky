@@ -17,7 +17,6 @@ function createWindow() {
   if (isDev) {
     win.loadURL("http://localhost:5173");
   } else {
-    // ✅ Update this to point to dist-renderer (or your actual Vite output folder)
     win.loadURL(
       url
         .pathToFileURL(path.join(__dirname, "../dist-renderer/index.html"))
