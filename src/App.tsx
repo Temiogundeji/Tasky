@@ -1,21 +1,25 @@
-import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import DashboardLayout from "./layouts/DashboardLayout";
+import Dashboard from "./pages/Dashboard";
+import Settings from "./pages/Settings";
+import Timer from "./pages/TimeTracking";
+import Tasks from "./pages/Tasks";
+import Analytics from "./pages/Analytics";
 
-const App: React.FC = () => {
+function App() {
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-md">
-        <h1 className="text-5xl font-bold text-red-800 mb-4">
-          Hello Electron + React!
-        </h1>
-        <p className="text-gray-600 mb-4">
-          This is your Electron app with React, TypeScript, and Tailwind CSS.
-        </p>
-        <button className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-          Click me!
-        </button>
-      </div>
-    </div>
+    <Router>
+      <Routes>
+        <Route element={<DashboardLayout />}>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/time-tracking" element={<Timer />} />
+          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/settings" element={<Settings />} />
+        </Route>
+      </Routes>
+    </Router>
   );
-};
+}
 
 export default App;
