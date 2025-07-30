@@ -7,7 +7,7 @@ type InputProps = {
   value?: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   error?: string;
-  className: string;
+  className?: string;
   placeholder?: string;
   icon?: React.ReactNode;
   required?: boolean;
